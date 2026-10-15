@@ -1,0 +1,28 @@
+name: Download logo images
+
+on:
+  push:
+    paths: [source.html, download_images.py]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  fetch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install pillow
+      - name: Download images and rebuild index.html
+        run: python download_images.py --shrink --max-px 1600
+      - name: Save images to the repository
+        run: |
+          git config user.name "github-actions"
+          git config user.email "github-actions@users.noreply.github.com"
+          git add images index.html failed_downloads.txt 2>/dev/null || git add images index.html
+          git commit -m "Download logo images" || echo "Nothing new to save"
+          git push
